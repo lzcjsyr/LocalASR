@@ -14,6 +14,11 @@ struct ContentView: View {
                         .tag("models")
                 }
 
+                Section("后台设置") {
+                    Label("LLM 设置", systemImage: "slider.horizontal.3")
+                        .tag("llm-settings")
+                }
+
             }
             .listStyle(.sidebar)
             .navigationTitle("本地 ASR")
@@ -21,6 +26,8 @@ struct ContentView: View {
             Group {
                 if selection == "models" {
                     ModelsView(modelStore: appState.modelStore)
+                } else if selection == "llm-settings" {
+                    LLMSettingsView(llmStore: appState.llmStore)
                 } else {
                     RecorderView(recorder: appState.recorder)
                 }
