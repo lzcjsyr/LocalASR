@@ -36,7 +36,7 @@ struct LocalASRApp: App {
         }
 
         Settings {
-            SettingsView()
+            SettingsView(llmStore: appState.llmStore)
                 .environmentObject(appState)
         }
     }

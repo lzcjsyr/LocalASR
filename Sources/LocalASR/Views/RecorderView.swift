@@ -87,20 +87,22 @@ struct RecorderView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Spacer()
+                Button("LLM 梳理") { appState.polishTranscript() }
+                    .disabled(appState.transcript.isEmpty || appState.isTranscribing || appState.isPolishing)
                 Button("清空") { appState.clearTranscript() }
-                    .disabled(appState.transcript.isEmpty || appState.isTranscribing)
+                    .disabled(appState.transcript.isEmpty || appState.isTranscribing || appState.isPolishing)
                 Button("复制") { appState.copyTranscript() }
                     .keyboardShortcut("c", modifiers: [.command, .option])
-                    .disabled(appState.transcript.isEmpty)
+                    .disabled(appState.transcript.isEmpty || appState.isPolishing)
                 Button("保存") { appState.saveTranscript() }
-                    .disabled(appState.transcript.isEmpty)
+                    .disabled(appState.transcript.isEmpty || appState.isPolishing)
             }
             .padding(12)
         }
         .animation(.easeInOut(duration: 0.2), value: appState.isRecording)
         .toolbar {
             ToolbarItem(placement: .automatic) {
-                if appState.isTranscribing {
+                if appState.isTranscribing || appState.isPolishing {
                     ProgressView()
                         .controlSize(.small)
                 }

@@ -5,15 +5,18 @@ import Foundation
 final class AppState: ObservableObject {
     let modelStore = ModelStore()
     let recorder = AudioRecorder()
+    let llmStore = LLMSettingsStore()
 
     @Published var transcript = ""
     @Published var statusMessage = "准备就绪"
     @Published var isRecording = false
     @Published var isTranscribing = false
+    @Published var isPolishing = false
     @Published var errorMessage: String?
     @Published private(set) var segments = [TranscriptSegment]()
 
     private let whisperService = WhisperService()
+    private let llmService = LLMService()
 
     var selectedModel: WhisperModel? {
         modelStore.selectedModel
@@ -103,6 +106,38 @@ final class AppState: ObservableObject {
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(transcript, forType: .string)
         statusMessage = "已复制到剪贴板"
+    }
+
+    func polishTranscript() {
+        let sourceText = transcript.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !sourceText.isEmpty else { return }
+        guard llmStore.save() else {
+            errorMessage = llmStore.statusMessage
+            return
+        }
+
+        let configuration = llmStore.configuration
+        let apiKey = llmStore.apiKey
+        isPolishing = true
+        errorMessage = nil
+        statusMessage = "正在使用 LLM 梳理文字…"
+
+        Task { [weak self] in
+            guard let self else { return }
+            do {
+                let polishedText = try await llmService.polish(
+                    text: sourceText,
+                    configuration: configuration,
+                    apiKey: apiKey
+                )
+                transcript = polishedText
+                statusMessage = "LLM 梳理完成 · \(configuration.model)"
+            } catch {
+                errorMessage = error.localizedDescription
+                statusMessage = "LLM 梳理失败"
+            }
+            isPolishing = false
+        }
     }
 
     func clearTranscript() {
