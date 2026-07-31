@@ -1,0 +1,7 @@
+.build/
+dist/
+.codex/
+vendor/whisper.cpp/build/
+models/*.bin
+vendor/whisper.cpp/models/*.bin
+.DS_Store
