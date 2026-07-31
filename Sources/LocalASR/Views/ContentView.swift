@@ -14,10 +14,6 @@ struct ContentView: View {
                         .tag("models")
                 }
 
-                Section("文字处理") {
-                    Label("LLM 润色", systemImage: "wand.and.stars")
-                        .tag("llm")
-                }
             }
             .listStyle(.sidebar)
             .navigationTitle("本地 ASR")
@@ -25,8 +21,6 @@ struct ContentView: View {
             Group {
                 if selection == "models" {
                     ModelsView(modelStore: appState.modelStore)
-                } else if selection == "llm" {
-                    LLMView(llmStore: appState.llmStore)
                 } else {
                     RecorderView(recorder: appState.recorder)
                 }

@@ -65,34 +65,57 @@ struct RecorderView: View {
 
             Divider()
 
-            ZStack(alignment: .topLeading) {
-                TextEditor(text: $appState.transcript)
-                    .font(.system(.body, design: .default))
-                    .scrollContentBackground(.hidden)
-                    .padding(18)
+            HStack(spacing: 0) {
+                TranscriptEditorPane(
+                    title: "ASR 原文",
+                    text: $appState.transcript,
+                    placeholder: "录音停止后，ASR 原文会显示在这里。你可以直接编辑。",
+                    copyAction: appState.copyTranscript
+                )
 
-                if appState.transcript.isEmpty {
-                    Text("录音停止后，识别结果会显示在这里。你可以直接编辑、复制或保存。")
-                        .foregroundStyle(.tertiary)
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 26)
-                        .allowsHitTesting(false)
-                }
+                Divider()
+
+                TranscriptEditorPane(
+                    title: "润色结果",
+                    text: $appState.polishedTranscript,
+                    placeholder: "点击“LLM 润色”后，整理结果会显示在这里。你可以继续编辑。",
+                    copyAction: appState.copyPolishedTranscript
+                )
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             Divider()
 
             HStack {
-                Text("ASR 在本机处理；可在左侧“LLM 润色”中配置服务并整理文字")
+                Text("ASR 在本机处理；LLM 润色会按后台设置发送原文")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Spacer()
+                Button {
+                    appState.polishTranscript()
+                } label: {
+                    Label("LLM 润色", systemImage: "wand.and.stars")
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(
+                    appState.transcript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                    || appState.isRecording
+                    || appState.isTranscribing
+                    || appState.isPolishing
+                )
                 Button("清空") { appState.clearTranscript() }
-                .disabled(appState.transcript.isEmpty || appState.isTranscribing || appState.isPolishing)
-                Button("复制") { appState.copyTranscript() }
+                    .disabled(
+                        appState.transcript.isEmpty
+                        && appState.polishedTranscript.isEmpty
+                        || appState.isTranscribing
+                        || appState.isPolishing
+                    )
+                Button("复制原文") { appState.copyTranscript() }
                     .keyboardShortcut("c", modifiers: [.command, .option])
                     .disabled(appState.transcript.isEmpty || appState.isPolishing)
-                Button("保存") { appState.saveTranscript() }
+                Button("复制润色") { appState.copyPolishedTranscript() }
+                    .disabled(appState.polishedTranscript.isEmpty || appState.isPolishing)
+                Button("保存原文") { appState.saveTranscript() }
                     .disabled(appState.transcript.isEmpty || appState.isPolishing)
             }
             .padding(12)
@@ -106,6 +129,47 @@ struct RecorderView: View {
                 }
             }
         }
+    }
+}
+
+private struct TranscriptEditorPane: View {
+    let title: String
+    @Binding var text: String
+    let placeholder: String
+    let copyAction: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                Text(title)
+                    .font(.headline)
+                Spacer()
+                Button("复制") {
+                    copyAction()
+                }
+                .disabled(text.isEmpty)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+
+            Divider()
+
+            ZStack(alignment: .topLeading) {
+                TextEditor(text: $text)
+                    .font(.system(.body, design: .default))
+                    .scrollContentBackground(.hidden)
+                    .padding(12)
+
+                if text.isEmpty {
+                    Text(placeholder)
+                        .foregroundStyle(.tertiary)
+                        .padding(.horizontal, 18)
+                        .padding(.vertical, 20)
+                        .allowsHitTesting(false)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
