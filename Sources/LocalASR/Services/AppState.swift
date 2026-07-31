@@ -28,6 +28,10 @@ final class AppState: ObservableObject {
         if isRecording {
             let audio = recorder.stop()
             isRecording = false
+            guard let audio else {
+                statusMessage = "未检测到有效语音"
+                return
+            }
             Task { await transcribe(audio: audio) }
         } else {
             Task { await startRecording() }
@@ -70,8 +74,18 @@ final class AppState: ObservableObject {
                 model: model,
                 modelURL: modelURL
             )
-            transcript = response.text.trimmingCharacters(in: .whitespacesAndNewlines)
-            segments = (response.segments ?? []).compactMap { segment in
+            let rawSegments = response.segments ?? []
+            let cleanedSegments = TranscriptCleaner.removeConsecutiveDuplicates(from: rawSegments)
+            if cleanedSegments.count < rawSegments.count {
+                transcript = cleanedSegments
+                    .compactMap { $0.text?.trimmingCharacters(in: .whitespacesAndNewlines) }
+                    .filter { !$0.isEmpty }
+                    .joined(separator: "\n")
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+            } else {
+                transcript = response.text.trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+            segments = cleanedSegments.compactMap { segment in
                 guard let start = segment.start, let end = segment.end, let text = segment.text else { return nil }
                 return TranscriptSegment(start: start, end: end, text: text.trimmingCharacters(in: .whitespacesAndNewlines))
             }

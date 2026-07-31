@@ -75,7 +75,7 @@ final class AudioRecorder: ObservableObject {
         }
     }
 
-    func stop() -> Data {
+    func stop() -> Data? {
         engine.inputNode.removeTap(onBus: 0)
         engine.stop()
         converter = nil
@@ -89,7 +89,11 @@ final class AudioRecorder: ObservableObject {
             self.isRecording = false
             self.waveformLevels = Self.idleWaveform
         }
-        return WAVEncoder.pcm16(samples: capturedSamples)
+
+        guard let speechSamples = AudioPreprocessor.trimSilence(capturedSamples) else {
+            return nil
+        }
+        return WAVEncoder.pcm16(samples: speechSamples)
     }
 
     private func requestMicrophoneAccess() async -> Bool {

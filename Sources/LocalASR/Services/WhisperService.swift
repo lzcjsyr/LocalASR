@@ -41,6 +41,10 @@ final class WhisperService {
             .field(name: "language", value: "zh")
             .field(name: "response_format", value: "verbose_json")
             .field(name: "temperature", value: "0.0")
+            .field(name: "temperature_inc", value: "0.2")
+            .field(name: "no_speech_thold", value: "0.6")
+            .field(name: "suppress_nst", value: "true")
+            .field(name: "no_context", value: "true")
             .build()
 
         let (data, response) = try await URLSession.shared.data(for: request)
