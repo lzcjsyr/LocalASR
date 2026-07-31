@@ -109,6 +109,7 @@ final class AppState: ObservableObject {
     }
 
     func polishTranscript() {
+        guard !isRecording, !isTranscribing, !isPolishing else { return }
         let sourceText = transcript.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !sourceText.isEmpty else { return }
         guard llmStore.save() else {

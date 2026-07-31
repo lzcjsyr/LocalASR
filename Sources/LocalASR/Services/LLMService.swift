@@ -48,6 +48,9 @@ struct LLMService {
     }
 
     func polish(text: String, configuration: LLMConfiguration, apiKey: String) async throws -> String {
+        guard !configuration.prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw LLMError.missingConfiguration
+        }
         let messages = [
             ChatMessage(role: "system", content: configuration.prompt),
             ChatMessage(role: "user", content: text)
@@ -71,9 +74,9 @@ struct LLMService {
         maxTokens: Int,
         temperature: Double
     ) async throws -> String {
+        let normalizedAPIKey = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !configuration.model.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-              !apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-              !configuration.prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+              !normalizedAPIKey.isEmpty else {
             throw LLMError.missingConfiguration
         }
 
@@ -82,7 +85,7 @@ struct LLMService {
         request.httpMethod = "POST"
         request.timeoutInterval = 180
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("Bearer \(normalizedAPIKey)", forHTTPHeaderField: "Authorization")
         request.httpBody = try JSONEncoder().encode(
             ChatCompletionRequest(
                 model: configuration.model,
