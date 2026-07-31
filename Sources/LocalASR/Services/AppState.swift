@@ -8,6 +8,7 @@ final class AppState: ObservableObject {
     let llmStore = LLMSettingsStore()
 
     @Published var transcript = ""
+    @Published var polishedTranscript = ""
     @Published var statusMessage = "准备就绪"
     @Published var isRecording = false
     @Published var isTranscribing = false
@@ -69,6 +70,7 @@ final class AppState: ObservableObject {
         isTranscribing = true
         errorMessage = nil
         statusMessage = "正在加载模型并转写…"
+        polishedTranscript = ""
 
         do {
             let modelURL = try await modelStore.validatedURL(for: model)
@@ -102,10 +104,18 @@ final class AppState: ObservableObject {
     }
 
     func copyTranscript() {
-        guard !transcript.isEmpty else { return }
+        copyText(transcript, status: "原文已复制到剪贴板")
+    }
+
+    func copyPolishedTranscript() {
+        copyText(polishedTranscript, status: "润色结果已复制到剪贴板")
+    }
+
+    private func copyText(_ text: String, status: String) {
+        guard !text.isEmpty else { return }
         NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(transcript, forType: .string)
-        statusMessage = "已复制到剪贴板"
+        NSPasteboard.general.setString(text, forType: .string)
+        statusMessage = status
     }
 
     func polishTranscript() {
@@ -131,8 +141,8 @@ final class AppState: ObservableObject {
                     configuration: configuration,
                     apiKey: apiKey
                 )
-                transcript = polishedText
-                statusMessage = "LLM 梳理完成 · \(configuration.model)"
+                polishedTranscript = polishedText
+                statusMessage = "LLM 梳理完成 · \(llmStore.selectedProvider?.name ?? configuration.model)"
             } catch {
                 errorMessage = error.localizedDescription
                 statusMessage = "LLM 梳理失败"
@@ -143,6 +153,7 @@ final class AppState: ObservableObject {
 
     func clearTranscript() {
         transcript = ""
+        polishedTranscript = ""
         segments = []
         statusMessage = "已清空"
     }

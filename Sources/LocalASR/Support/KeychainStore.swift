@@ -5,7 +5,7 @@ enum KeychainStore {
     static let service = "com.localasr.app.llm"
     static let account = "openai-compatible-api-key"
 
-    static func read() -> String? {
+    static func read(account: String = account) -> String? {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -22,7 +22,12 @@ enum KeychainStore {
         return String(data: data, encoding: .utf8)
     }
 
-    static func save(_ value: String) throws {
+    static func save(_ value: String, account: String = account) throws {
+        if value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            try delete(account: account)
+            return
+        }
+
         let data = Data(value.utf8)
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
@@ -39,6 +44,18 @@ enum KeychainStore {
             guard addStatus == errSecSuccess else { throw LLMError.keychainFailure(addStatus) }
         } else if updateStatus != errSecSuccess {
             throw LLMError.keychainFailure(updateStatus)
+        }
+    }
+
+    static func delete(account: String = account) throws {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account
+        ]
+        let status = SecItemDelete(query as CFDictionary)
+        guard status == errSecSuccess || status == errSecItemNotFound else {
+            throw LLMError.keychainFailure(status)
         }
     }
 }

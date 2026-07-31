@@ -83,14 +83,12 @@ struct RecorderView: View {
             Divider()
 
             HStack {
-                Text("ASR 在本机处理；LLM 梳理会按设置发送文字")
+                Text("ASR 在本机处理；可在左侧“LLM 润色”中配置服务并整理文字")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Spacer()
-                Button("LLM 梳理") { appState.polishTranscript() }
-                    .disabled(appState.transcript.isEmpty || appState.isRecording || appState.isTranscribing || appState.isPolishing)
                 Button("清空") { appState.clearTranscript() }
-                    .disabled(appState.transcript.isEmpty || appState.isTranscribing || appState.isPolishing)
+                .disabled(appState.transcript.isEmpty || appState.isTranscribing || appState.isPolishing)
                 Button("复制") { appState.copyTranscript() }
                     .keyboardShortcut("c", modifiers: [.command, .option])
                     .disabled(appState.transcript.isEmpty || appState.isPolishing)

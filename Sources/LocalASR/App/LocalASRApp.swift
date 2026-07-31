@@ -16,9 +16,9 @@ struct LocalASRApp: App {
 
     var body: some Scene {
         WindowGroup("本地 ASR") {
-            ContentView()
-                .environmentObject(appState)
-                .frame(minWidth: 900, minHeight: 620)
+                ContentView()
+                    .environmentObject(appState)
+                .frame(minWidth: 1080, minHeight: 720)
                 .onChange(of: scenePhase) { _, phase in
                     if phase != .active {
                         appState.stopEngine()
@@ -36,7 +36,7 @@ struct LocalASRApp: App {
         }
 
         Settings {
-            SettingsView(llmStore: appState.llmStore)
+            SettingsView()
                 .environmentObject(appState)
         }
     }
